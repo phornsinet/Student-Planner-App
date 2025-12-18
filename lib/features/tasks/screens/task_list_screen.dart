@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart'; // Needed for date formatting
 import '../controllers/task_controller.dart';
 import '../models/task_model.dart';
 import 'add_task_screen.dart';
@@ -13,11 +14,13 @@ class TaskListScreen extends StatefulWidget {
 
 class _TaskListScreenState extends State<TaskListScreen> {
   final TaskController _controller = TaskController();
+  // Using string for filter states to match your UI tabs
   String _activeFilter = "All";
 
   @override
   void initState() {
     super.initState();
+    // Start listening to the real-time Firestore stream
     _controller.loadTasks();
   }
 
@@ -25,11 +28,12 @@ class _TaskListScreenState extends State<TaskListScreen> {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
 
+    // ListenableBuilder rebuilds the subtree whenever the controller notifies changes
     return ListenableBuilder(
       listenable: _controller,
       builder: (context, child) {
         return Scaffold(
-          backgroundColor: const Color(0xFFF1F5F9), // Light grey background from image
+          backgroundColor: const Color(0xFFF1F5F9),
           body: SafeArea(
             child: _controller.isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -40,7 +44,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                       children: [
                         _buildHeader(user?.email ?? "User"),
                         const SizedBox(height: 24),
-                        _buildMyTasksSection(),
+                        _buildMyTasksSection(), // This section contains the list
                         const SizedBox(height: 24),
                         _buildOverallProgress(),
                         const SizedBox(height: 24),
@@ -54,7 +58,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
     );
   }
 
-  // 1. TOP HEADER (Image 4)
+  // ... (Keep _buildHeader unchanged) ...
   Widget _buildHeader(String email) {
     return Row(
       children: [
@@ -83,11 +87,20 @@ class _TaskListScreenState extends State<TaskListScreen> {
     );
   }
 
-  // 2. MY TASKS SECTION (Image 4)
+
+  // === UPDATED SECTION: MY TASKS ===
   Widget _buildMyTasksSection() {
+    // 1. Filter tasks based on the selected tab
+    final filteredList = _controller.tasks.where((task) {
+      if (_activeFilter == "Pending") return !task.isCompleted;
+      if (_activeFilter == "Completed") return task.isCompleted;
+      return true; // "All"
+    }).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Section Title and Add Button
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -95,7 +108,8 @@ class _TaskListScreenState extends State<TaskListScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text("My Tasks", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                Text("${_controller.totalTasks} tasks in total", style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                // Real-time count update
+                Text("${filteredList.length} tasks listed", style: const TextStyle(color: Colors.grey, fontSize: 12)),
               ],
             ),
             ElevatedButton.icon(
@@ -107,13 +121,163 @@ class _TaskListScreenState extends State<TaskListScreen> {
           ],
         ),
         const SizedBox(height: 16),
+        // Filter Tabs
         _buildFilterTabs(),
         const SizedBox(height: 16),
-        _buildEmptyState(),
+        
+        // The Task List or Empty State
+        filteredList.isEmpty 
+            ? _buildEmptyState() 
+            : _buildTaskList(filteredList),
       ],
     );
   }
 
+  // === NEW CODE: THE TASK LIST VIEW ===
+  Widget _buildTaskList(List<TaskModel> tasks) {
+    return ListView.separated(
+      shrinkWrap: true, // Important for being inside SingleChildScrollView
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: tasks.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        return _buildTaskCard(tasks[index]);
+      },
+    );
+  }
+
+  // === NEW CODE: THE INDIVIDUAL TASK CARD ===
+  Widget _buildTaskCard(TaskModel task) {
+    // Determine colors based on category
+    final categoryColor = _getCategoryColor(task.category);
+    final categoryIcon = _getCategoryIcon(task.category);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Row 1: Checkbox, Title, Category Badge
+          Row(
+            children: [
+              // Custom Checkbox looking style
+              InkWell(
+                onTap: () => _controller.toggleTaskStatus(task),
+                child: Container(
+                  width: 24, height: 24,
+                  decoration: BoxDecoration(
+                    color: task.isCompleted ? const Color(0xFF2563EB) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: task.isCompleted ? const Color(0xFF2563EB) : const Color(0xFFCBD5E1), width: 2)
+                  ),
+                  child: task.isCompleted ? const Icon(Icons.check, size: 16, color: Colors.white) : null,
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Title
+              Expanded(
+                child: Text(
+                  task.title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    decoration: task.isCompleted ? TextDecoration.lineThrough : null,
+                    color: task.isCompleted ? Colors.grey : Colors.black,
+                  ),
+                ),
+              ),
+              // Category Badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: categoryColor,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  children: [
+                    Icon(categoryIcon, size: 12, color: Colors.white),
+                    const SizedBox(width: 4),
+                    Text(
+                      task.categoryName,
+                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          
+          // Row 2: Description (if exists)
+          if (task.description.isNotEmpty) ...[
+             const SizedBox(height: 8),
+             Padding(
+               padding: const EdgeInsets.only(left: 36.0), // Indent to align with title
+               child: Text(
+                 task.description,
+                 style: const TextStyle(color: Colors.grey, fontSize: 13),
+                 maxLines: 2,
+                 overflow: TextOverflow.ellipsis,
+               ),
+             ),
+          ],
+
+          const SizedBox(height: 16),
+          // Row 3: Date and Actions
+          Row(
+            children: [
+              const SizedBox(width: 36), // Indent
+              // Date Icon and Text
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(6)),
+                child: Icon(Icons.calendar_today_outlined, size: 14, color: Colors.blue[700]),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                DateFormat('MMM dd, yyyy').format(task.dueDate),
+                style: TextStyle(color: Colors.blue[700], fontSize: 13, fontWeight: FontWeight.w500),
+              ),
+              const Spacer(),
+              // Edit Icon (Placeholder action)
+              Icon(Icons.edit_outlined, size: 18, color: Colors.blue[600]),
+              const SizedBox(width: 16),
+              // Delete Icon
+              InkWell(
+                onTap: () => _controller.deleteTask(task.id),
+                child: const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent),
+              ),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
+  // === NEW HELPER FUNCTIONS FOR COLORS/ICONS ===
+  Color _getCategoryColor(TaskCategory category) {
+    switch (category) {
+      case TaskCategory.assignments: return const Color(0xFF2563EB); // Blue
+      case TaskCategory.exams: return const Color(0xFFE11D48);       // Red
+      case TaskCategory.studySessions: return const Color(0xFF059669); // Green
+    }
+  }
+
+  IconData _getCategoryIcon(TaskCategory category) {
+     switch (category) {
+      case TaskCategory.assignments: return Icons.description;
+      case TaskCategory.exams: return Icons.school;
+      case TaskCategory.studySessions: return Icons.menu_book;
+    }
+  }
+
+  // ... (Keep _buildFilterTabs, _buildEmptyState, _buildOverallProgress, 
+  //      _buildStatusBox, _buildByCategory, _categoryRow, _buildSectionHeader unchanged) ...
+  
   Widget _buildFilterTabs() {
     return Container(
       padding: const EdgeInsets.all(4),
@@ -121,7 +285,12 @@ class _TaskListScreenState extends State<TaskListScreen> {
       child: Row(
         children: ["All", "Pending", "Completed"].map((tab) {
           final isSelected = _activeFilter == tab;
-          final count = tab == "All" ? _controller.totalTasks : tab == "Pending" ? _controller.pendingTasks : _controller.completedTasks;
+          // Dynamic counts for tabs
+          int count = 0;
+          if(tab == "All") count = _controller.totalTasks;
+          if(tab == "Pending") count = _controller.pendingTasks;
+          if(tab == "Completed") count = _controller.completedTasks;
+          
           return Expanded(
             child: GestureDetector(
               onTap: () => setState(() => _activeFilter = tab),
@@ -152,7 +321,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
     );
   }
 
-  // 3. OVERALL PROGRESS SECTION (Image 3)
   Widget _buildOverallProgress() {
     return Container(
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
@@ -213,7 +381,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
     );
   }
 
-  // 4. BY CATEGORY SECTION (Image 3)
   Widget _buildByCategory() {
     return Container(
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
@@ -252,7 +419,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
     );
   }
 
-  // SHARED UI HELPER
   Widget _buildSectionHeader(String title, IconData icon) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
