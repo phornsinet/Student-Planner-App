@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
-// --- IMPORTS (Ensuring relative paths match your sidebar) ---
+// --- IMPORTS ---
 import '../../tasks/screens/task_list_screen.dart'; 
 import '../../timer/screens/pomodoro_screen.dart'; 
 import 'account_screen.dart';
-import 'music_placeholder_screen.dart';
+// 1. CHANGE THIS IMPORT (Ensure you create quote_screen.dart)
+import 'quote_screen.dart'; 
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -16,26 +17,22 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
-  // The order of these screens MUST match the destinations below
+  // 2. UPDATE THE SCREEN LIST
   final List<Widget> _screens = [
     const TaskListScreen(),         // Index 0
     const PomodoroScreen(),         // Index 1
-    const MusicPlaceholderScreen(), // Index 2
+    const QuoteScreen(),            // Index 2 (Changed from Music)
     const AccountScreen(),          // Index 3
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Soft background color for a modern feel (Slate-50)
       backgroundColor: const Color(0xFFF8FAFC), 
-      
       body: IndexedStack(
         index: _selectedIndex,
         children: _screens,
       ),
-
-      // Redesigned modern Navigation Bar
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -55,17 +52,9 @@ class _MainScreenState extends State<MainScreen> {
                 indicatorColor: const Color(0xFF2563EB).withOpacity(0.1),
                 labelTextStyle: WidgetStateProperty.resolveWith((states) {
                   if (states.contains(WidgetState.selected)) {
-                    return const TextStyle(
-                      fontSize: 12, 
-                      fontWeight: FontWeight.w600, 
-                      color: Color(0xFF2563EB)
-                    );
+                    return const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF2563EB));
                   }
-                  return const TextStyle(
-                    fontSize: 12, 
-                    fontWeight: FontWeight.w500, 
-                    color: Color(0xFF64748B)
-                  );
+                  return const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF64748B));
                 }),
               ),
               child: NavigationBar(
@@ -74,7 +63,6 @@ class _MainScreenState extends State<MainScreen> {
                 backgroundColor: Colors.transparent,
                 elevation: 0,
                 height: 65,
-                // These destinations match your screens list order exactly
                 destinations: const [
                   NavigationDestination(
                     icon: Icon(Icons.home_outlined, color: Color(0xFF64748B)),
@@ -86,10 +74,11 @@ class _MainScreenState extends State<MainScreen> {
                     selectedIcon: Icon(Icons.timer_rounded, color: Color(0xFF2563EB)),
                     label: 'Timer',
                   ),
+                  // 3. UPDATE THE QUOTES DESTINATION
                   NavigationDestination(
-                    icon: Icon(Icons.music_note_outlined, color: Color(0xFF64748B)),
-                    selectedIcon: Icon(Icons.music_note_rounded, color: Color(0xFF2563EB)),
-                    label: 'Music',
+                    icon: Icon(Icons.lightbulb_outline, color: Color(0xFF64748B)),
+                    selectedIcon: Icon(Icons.lightbulb_rounded, color: Color(0xFF2563EB)),
+                    label: 'Quotes',
                   ),
                   NavigationDestination(
                     icon: Icon(Icons.person_outline, color: Color(0xFF64748B)),

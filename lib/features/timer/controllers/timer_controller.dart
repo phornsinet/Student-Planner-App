@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:audioplayers/audioplayers.dart'; // NEW IMPORT
+import 'package:audioplayers/audioplayers.dart';
 
 class TimerController extends ChangeNotifier {
   Timer? _timer;
@@ -30,32 +30,43 @@ class TimerController extends ChangeNotifier {
     return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 
-  // SOUND LOGIC: Play sound when the timer starts
+  // --- SOUND LOGIC ---
+
   Future<void> _playStartSound() async {
     try {
-      // Audioplayers 6.x uses AssetSource for files in the assets folder
+      // We set release mode to loop so the sound continues while focusing
+      await _audioPlayer.setReleaseMode(ReleaseMode.loop);
       await _audioPlayer.play(AssetSource('sounds/start_timer.mp3'));
     } catch (e) {
       debugPrint("Error playing sound: $e");
     }
   }
 
-  // Update session time (e.g., change to 15, 45, or 60 mins)
+  // NEW: Helper to stop the sound
+  Future<void> _stopSound() async {
+    try {
+      await _audioPlayer.stop();
+    } catch (e) {
+      debugPrint("Error stopping sound: $e");
+    }
+  }
+
+  // --- TIMER LOGIC ---
+
   void setSessionTime(int minutes) {
     _timer?.cancel();
+    _stopSound(); // Stop sound if session duration is changed
     _isActive = false;
     _totalSessionSeconds = minutes * 60;
     _secondsRemaining = _totalSessionSeconds;
     notifyListeners();
   }
 
-  // Update the daily goal (e.g., change 120 mins to 200 mins)
   void updateDailyGoal(int newGoal) {
     dailyGoalMinutes = newGoal;
     notifyListeners();
   }
 
-  // Load today's focus minutes from Firebase
   Future<void> loadDailyFocusTime() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -84,9 +95,11 @@ class TimerController extends ChangeNotifier {
 
   void toggleTimer() {
     if (_isActive) {
+      // 1. PAUSE: Cancel timer and STOP sound
       _timer?.cancel();
+      _stopSound(); 
     } else {
-      // PLAY SOUND when starting
+      // 2. START: Play sound and start timer
       _playStartSound(); 
 
       _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -104,6 +117,7 @@ class TimerController extends ChangeNotifier {
 
   void resetTimer() {
     _timer?.cancel();
+    _stopSound(); // STOP sound when user resets
     _isActive = false;
     _secondsRemaining = _totalSessionSeconds;
     notifyListeners();
@@ -111,6 +125,7 @@ class TimerController extends ChangeNotifier {
 
   Future<void> _completeSession() async {
     _timer?.cancel();
+    _stopSound(); // STOP sound when session finishes
     _isActive = false;
     
     final user = FirebaseAuth.instance.currentUser;
@@ -133,7 +148,7 @@ class TimerController extends ChangeNotifier {
   @override
   void dispose() {
     _timer?.cancel();
-    _audioPlayer.dispose(); // Always dispose the player to save memory
+    _audioPlayer.dispose(); 
     super.dispose();
   }
 }

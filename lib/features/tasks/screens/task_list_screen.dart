@@ -85,7 +85,7 @@ Widget _buildHeader(String email) {
       ),
       const SizedBox(width: 12),
       const Text(
-        "Smart Study",
+        "Smart Study Planner",
         style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
       ),
     ],
@@ -117,7 +117,7 @@ Widget _buildHeader(String email) {
             ),
             ElevatedButton.icon(
               onPressed: () => showDialog(context: context, builder: (_) => AddTaskPopup(controller: _controller)),
-              icon: const Icon(Icons.add, size: 18),
+              icon: const Icon(Icons.add, size: 18, color: Colors.white),
               label: const Text("Add Task"),
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2563EB), foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
             ),
@@ -343,10 +343,7 @@ Widget _buildHeader(String email) {
             const Text("Daily Focus Goal", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const Spacer(),
             // EDIT DAILY GOAL BUTTON
-            IconButton(
-              icon: const Icon(Icons.settings, size: 18, color: Colors.grey),
-              onPressed: () => _showGoalSettings(timerController),
-            ),
+            
           ],
         ),
         const SizedBox(height: 16),
@@ -367,22 +364,27 @@ Widget _buildHeader(String email) {
         ),
         const SizedBox(height: 20),
         // NAVIGATION BUTTON TO TIMER
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const PomodoroScreen()));
-            },
-            icon: const Icon(Icons.timer_outlined),
-            label: const Text("Start Focus Session"),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2563EB),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          ),
-        ),
+        // NAVIGATION BUTTON TO TIMER
+SizedBox(
+  width: double.infinity,
+  child: ElevatedButton.icon(
+    onPressed: () {
+      // This pushes the PomodoroScreen onto the navigation stack
+      Navigator.push(
+        context, 
+        MaterialPageRoute(builder: (context) => const PomodoroScreen()),
+      );
+    },
+    icon: const Icon(Icons.timer_outlined, color: Colors.white),
+    label: const Text("Start Focus Session"),
+    style: ElevatedButton.styleFrom(
+      backgroundColor: const Color(0xFF2563EB),
+      foregroundColor: Colors.white,
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ),
+  ),
+),
       ],
     ),
   );
