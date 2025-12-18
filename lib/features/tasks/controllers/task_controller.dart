@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Added for user ID
+import 'package:cloud_firestore/cloud_firestore.dart'; // Added for fetching profile
 import '../models/task_model.dart';
 import '../data/task_repository.dart';
-// Note: If you have logic in TaskService, keep it, 
-// but usually we can move that logic here to keep it simple.
 
 class TaskController extends ChangeNotifier {
   final TaskRepository _repository = TaskRepository();
@@ -10,22 +10,44 @@ class TaskController extends ChangeNotifier {
   List<TaskModel> _tasks = [];
   bool _isLoading = true;
 
+  // --- NEW PROFILE VARIABLES ---
+  String? _userProfileBase64;
+  String? get userProfileBase64 => _userProfileBase64;
+
   // Getters
   List<TaskModel> get tasks => _tasks;
   bool get isLoading => _isLoading;
 
-  // --- REAL-TIME LISTENER ---
+  // --- NEW: LOAD USER PROFILE ---
+  // Fetches the Base64 image string from the users collection
+  Future<void> loadUserProfile() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
 
+        if (doc.exists && doc.data() != null) {
+          _userProfileBase64 = doc.data()?['photoBase64'];
+          notifyListeners(); // Refreshes the Dashboard header
+        }
+      } catch (e) {
+        debugPrint("Error loading profile: $e");
+      }
+    }
+  }
+
+  // --- REAL-TIME TASK LISTENER ---
   void loadTasks() {
     _isLoading = true;
     notifyListeners();
 
-    // We "listen" to the stream. Every time a task is added/deleted in Firebase,
-    // this block of code runs automatically.
     _repository.getTasksStream().listen((newList) {
       _tasks = newList;
       _isLoading = false;
-      notifyListeners(); // This refreshes your UI screens!
+      notifyListeners(); 
     }, onError: (error) {
       debugPrint("Firestore Error: $error");
       _isLoading = false;
@@ -34,7 +56,6 @@ class TaskController extends ChangeNotifier {
   }
 
   // --- CALCULATED STATS ---
-
   int get totalTasks => _tasks.length;
   int get completedTasks => _tasks.where((t) => t.isCompleted).length;
   int get pendingTasks => _tasks.where((t) => !t.isCompleted).length;
@@ -49,7 +70,6 @@ class TaskController extends ChangeNotifier {
   }
 
   // --- ACTIONS ---
-
   Future<void> addTask({
     required String title, 
     required TaskCategory category, 
@@ -57,7 +77,7 @@ class TaskController extends ChangeNotifier {
     String description = ""
   }) async {
     final newTask = TaskModel(
-      id: '', // Firestore will create this ID
+      id: '', 
       title: title,
       category: category,
       dueDate: dueDate,
@@ -66,8 +86,6 @@ class TaskController extends ChangeNotifier {
     );
 
     await _repository.saveTask(newTask);
-    // Notice: We don't need to manually add to _tasks. 
-    // The Stream listener above will detect the new task and update the UI!
   }
 
   Future<void> toggleTaskStatus(TaskModel task) async {

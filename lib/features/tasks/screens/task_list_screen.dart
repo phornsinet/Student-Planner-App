@@ -4,6 +4,8 @@ import 'package:intl/intl.dart'; // Needed for date formatting
 import '../controllers/task_controller.dart';
 import '../models/task_model.dart';
 import 'add_task_screen.dart';
+import 'edit_profile_screen.dart';
+import 'dart:convert';
 
 class TaskListScreen extends StatefulWidget {
   const TaskListScreen({super.key});
@@ -17,12 +19,12 @@ class _TaskListScreenState extends State<TaskListScreen> {
   // Using string for filter states to match your UI tabs
   String _activeFilter = "All";
 
-  @override
-  void initState() {
-    super.initState();
-    // Start listening to the real-time Firestore stream
-    _controller.loadTasks();
-  }
+ @override
+void initState() {
+  super.initState();
+  _controller.loadTasks();      // Loads your task list
+  _controller.loadUserProfile(); // Loads your Base64 photo from Firestore
+}
 
   @override
   Widget build(BuildContext context) {
@@ -58,35 +60,79 @@ class _TaskListScreenState extends State<TaskListScreen> {
     );
   }
 
-  // ... (Keep _buildHeader unchanged) ...
-  Widget _buildHeader(String email) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: const Color(0xFF2563EB), borderRadius: BorderRadius.circular(8)),
-          child: const Icon(Icons.school, color: Colors.white, size: 28),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text("Smart Study Planner", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              Text(email, style: const TextStyle(color: Color(0xFF2563EB), fontSize: 13)),
-            ],
-          ),
-        ),
-        OutlinedButton.icon(
-          onPressed: () => FirebaseAuth.instance.signOut(),
-          icon: const Icon(Icons.logout, size: 16),
-          label: const Text("Logout"),
-          style: OutlinedButton.styleFrom(foregroundColor: const Color(0xFF2563EB), side: const BorderSide(color: Color(0xFFE2E8F0))),
-        ),
-      ],
-    );
-  }
+ Widget _buildHeader(String email) {
+  final user = FirebaseAuth.instance.currentUser;
 
+  return Row(
+    children: [
+      // 1. PROFILE IMAGE SECTION
+      CircleAvatar(
+        radius: 24,
+        backgroundColor: const Color(0xFF2563EB),
+        // Checks if the controller has the Base64 photo string we saved to Firestore
+        child: _controller.userProfileBase64 != null && _controller.userProfileBase64!.isNotEmpty
+            ? ClipOval(
+                child: Image.memory(
+                  base64Decode(_controller.userProfileBase64!),
+                  fit: BoxFit.cover,
+                  width: 48,
+                  height: 48,
+                  errorBuilder: (context, error, stackTrace) => 
+                      const Icon(Icons.person, color: Colors.white),
+                ),
+              )
+            : const Icon(Icons.school, color: Colors.white, size: 24),
+      ),
+      const SizedBox(width: 12),
+      
+      // 2. TEXT SECTION (Title & Email)
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              user?.displayName ?? "Smart Study Planner", 
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, overflow: TextOverflow.ellipsis)
+            ),
+            Text(
+              email, 
+              style: const TextStyle(color: Color(0xFF2563EB), fontSize: 11, overflow: TextOverflow.ellipsis)
+            ),
+          ],
+        ),
+      ),
+
+      // 3. EDIT PROFILE BUTTON
+      IconButton(
+        icon: const Icon(Icons.edit_note, color: Color(0xFF2563EB)),
+        tooltip: "Edit Profile",
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+          );
+        },
+      ),
+
+      // 4. LOGOUT BUTTON
+      OutlinedButton(
+        onPressed: () => FirebaseAuth.instance.signOut(),
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          side: const BorderSide(color: Color(0xFFE2E8F0)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.logout, size: 14, color: Color(0xFF2563EB)),
+            SizedBox(width: 4),
+            Text("Logout", style: TextStyle(fontSize: 12, color: Color(0xFF2563EB))),
+          ],
+        ),
+      ),
+    ],
+  );
+}
 
   // === UPDATED SECTION: MY TASKS ===
   Widget _buildMyTasksSection() {
