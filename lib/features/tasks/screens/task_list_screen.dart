@@ -6,33 +6,41 @@ import '../models/task_model.dart';
 import 'add_task_screen.dart';
 import 'edit_profile_screen.dart';
 import 'dart:convert';
+import 'package:flutter/material.dart';
+// Replace 'student_planner_app' with your actual project name if different
+import 'package:student_planner_app/features/timer/controllers/timer_controller.dart';
+import 'package:student_planner_app/features/timer/screens/pomodoro_screen.dart';
 
 class TaskListScreen extends StatefulWidget {
   const TaskListScreen({super.key});
-
   @override
   State<TaskListScreen> createState() => _TaskListScreenState();
 }
 
 class _TaskListScreenState extends State<TaskListScreen> {
   final TaskController _controller = TaskController();
-  // Using string for filter states to match your UI tabs
+  // 1. ADD THIS LINE
+  final TimerController _timerController = TimerController(); 
+
   String _activeFilter = "All";
 
- @override
-void initState() {
-  super.initState();
-  _controller.loadTasks();      // Loads your task list
-  _controller.loadUserProfile(); // Loads your Base64 photo from Firestore
-}
-
   @override
+  void initState() {
+    super.initState();
+    _controller.loadTasks();
+    _controller.loadUserProfile();
+    // 2. ADD THIS LINE to fetch today's minutes
+    _timerController.loadDailyFocusTime(); 
+  }
+
+ @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
 
-    // ListenableBuilder rebuilds the subtree whenever the controller notifies changes
+    // 1. We use Listenable.merge to listen to BOTH _controller (Tasks) 
+    // and _timerController (Focus Time) at the same time.
     return ListenableBuilder(
-      listenable: _controller,
+      listenable: Listenable.merge([_controller, _timerController]),
       builder: (context, child) {
         return Scaffold(
           backgroundColor: const Color(0xFFF1F5F9),
@@ -46,7 +54,12 @@ void initState() {
                       children: [
                         _buildHeader(user?.email ?? "User"),
                         const SizedBox(height: 24),
-                        _buildMyTasksSection(), // This section contains the list
+                        
+                        // 2. ADDED: This shows your Blue Bolt Focus card
+                        _buildFocusSummaryCard(_timerController), 
+                        
+                        const SizedBox(height: 24),
+                        _buildMyTasksSection(), 
                         const SizedBox(height: 24),
                         _buildOverallProgress(),
                         const SizedBox(height: 24),
@@ -59,81 +72,25 @@ void initState() {
       },
     );
   }
-
- Widget _buildHeader(String email) {
-  final user = FirebaseAuth.instance.currentUser;
-
+Widget _buildHeader(String email) {
   return Row(
     children: [
-      // 1. PROFILE IMAGE SECTION
-      CircleAvatar(
-        radius: 24,
-        backgroundColor: const Color(0xFF2563EB),
-        // Checks if the controller has the Base64 photo string we saved to Firestore
-        child: _controller.userProfileBase64 != null && _controller.userProfileBase64!.isNotEmpty
-            ? ClipOval(
-                child: Image.memory(
-                  base64Decode(_controller.userProfileBase64!),
-                  fit: BoxFit.cover,
-                  width: 48,
-                  height: 48,
-                  errorBuilder: (context, error, stackTrace) => 
-                      const Icon(Icons.person, color: Colors.white),
-                ),
-              )
-            : const Icon(Icons.school, color: Colors.white, size: 24),
+      Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: const Color(0xFF2563EB),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(Icons.school, color: Colors.white, size: 24),
       ),
       const SizedBox(width: 12),
-      
-      // 2. TEXT SECTION (Title & Email)
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              user?.displayName ?? "Smart Study Planner", 
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, overflow: TextOverflow.ellipsis)
-            ),
-            Text(
-              email, 
-              style: const TextStyle(color: Color(0xFF2563EB), fontSize: 11, overflow: TextOverflow.ellipsis)
-            ),
-          ],
-        ),
-      ),
-
-      // 3. EDIT PROFILE BUTTON
-      IconButton(
-        icon: const Icon(Icons.edit_note, color: Color(0xFF2563EB)),
-        tooltip: "Edit Profile",
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const EditProfileScreen()),
-          );
-        },
-      ),
-
-      // 4. LOGOUT BUTTON
-      OutlinedButton(
-        onPressed: () => FirebaseAuth.instance.signOut(),
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          side: const BorderSide(color: Color(0xFFE2E8F0)),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-        child: const Row(
-          children: [
-            Icon(Icons.logout, size: 14, color: Color(0xFF2563EB)),
-            SizedBox(width: 4),
-            Text("Logout", style: TextStyle(fontSize: 12, color: Color(0xFF2563EB))),
-          ],
-        ),
+      const Text(
+        "Smart Study",
+        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
       ),
     ],
   );
 }
-
   // === UPDATED SECTION: MY TASKS ===
   Widget _buildMyTasksSection() {
     // 1. Filter tasks based on the selected tab
@@ -367,6 +324,74 @@ void initState() {
     );
   }
 
+  Widget _buildFocusSummaryCard(TimerController timerController) {
+  double progress = (timerController.totalFocusMinutesToday / timerController.dailyGoalMinutes).clamp(0.0, 1.0);
+
+  return Container(
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+    ),
+    child: Column(
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.bolt, color: Color(0xFF2563EB)),
+            const SizedBox(width: 8),
+            const Text("Daily Focus Goal", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const Spacer(),
+            // EDIT DAILY GOAL BUTTON
+            IconButton(
+              icon: const Icon(Icons.settings, size: 18, color: Colors.grey),
+              onPressed: () => _showGoalSettings(timerController),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        LinearProgressIndicator(
+          value: progress,
+          minHeight: 8,
+          backgroundColor: const Color(0xFFE2E8F0),
+          valueColor: const AlwaysStoppedAnimation(Color(0xFF2563EB)),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text("${timerController.totalFocusMinutesToday} / ${timerController.dailyGoalMinutes} min",
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text("${(progress * 100).toInt()}%", style: const TextStyle(color: Colors.grey)),
+          ],
+        ),
+        const SizedBox(height: 20),
+        // NAVIGATION BUTTON TO TIMER
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const PomodoroScreen()));
+            },
+            icon: const Icon(Icons.timer_outlined),
+            label: const Text("Start Focus Session"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2563EB),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+// Add this helper function below build
+void _showGoalSettings(TimerController controller) {
+  // Logic to show a dialog and update controller.dailyGoalMinutes
+}
   Widget _buildOverallProgress() {
     return Container(
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
