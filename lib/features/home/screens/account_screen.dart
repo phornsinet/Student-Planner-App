@@ -111,13 +111,22 @@ class _AccountScreenState extends State<AccountScreen> {
                       const SizedBox(height: 12),
                       _buildSettingsGroup([
                         _buildAccountTile(
-                          icon: Icons.edit_rounded,
-                          title: "Edit Profile",
-                          subtitle: "Update info & photo",
-                          iconBgColor: const Color(0xFFDBEAFE),
-                          iconColor: const Color(0xFF2563EB),
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen())),
-                        ),
+  icon: Icons.edit_rounded,
+  title: "Edit Profile",
+  subtitle: "Update info & photo",
+  iconBgColor: const Color(0xFFDBEAFE),
+  iconColor: const Color(0xFF2563EB),
+  // --- UPDATED THIS SECTION ---
+  onTap: () async {
+    // 1. Wait for the user to come back from the Edit screen
+    await Navigator.push(
+      context, 
+      MaterialPageRoute(builder: (_) => const EditProfileScreen())
+    );
+    // 2. Refresh the data once they are back
+    _controller.loadUserProfile(); 
+  },
+),
                         _buildAccountTile(
                           icon: Icons.notifications_active_rounded,
                           title: "Notifications",

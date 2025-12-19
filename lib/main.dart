@@ -1,12 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
-import 'features/auth/screens/login_screen.dart';
-
-// --- CHANGE THIS IMPORT ---
-// Import MainScreen instead of TaskListScreen
-import 'features/home/screens/main_screen.dart'; 
+import 'features/auth/screens/splash_screen.dart'; // Adjust path if necessary
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,26 +20,11 @@ class MyApp extends StatelessWidget {
       title: 'Student Planner',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1976D2)),
         useMaterial3: true,
       ),
-      home: StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(body: Center(child: CircularProgressIndicator()));
-          }
-          
-          // --- THE CRITICAL FIX ---
-          // If the user is logged in, send them to MainScreen
-          // This ensures the BottomNavigationBar is visible
-          if (snapshot.hasData) {
-            return const MainScreen(); 
-          }
-          
-          return const LoginScreen();
-        },
-      ),
+      // App always starts with the Animated Splash Screen
+      home: const SplashScreen(), 
     );
   }
 }

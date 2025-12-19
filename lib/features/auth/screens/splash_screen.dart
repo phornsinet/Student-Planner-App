@@ -1,7 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-
-// Assuming your primary screens are in the same directory structure
+import 'package:firebase_auth/firebase_auth.dart';
 import 'login_screen.dart'; 
+import '../../home/screens/main_screen.dart'; // Ensure this path is correct
 
 // Define constants for design elements
 const Color primaryBlue = Color(0xFF1976D2);
@@ -43,18 +44,31 @@ class _SplashScreenState extends State<SplashScreen>
     // Start the animation
     _animationController.forward();
 
-    // 3. Set the Timer for Navigation
+    // 3. Set the Timer for Navigation with Auth Check
     _startTimer();
   }
 
   void _startTimer() {
     Future.delayed(const Duration(seconds: splashDurationSeconds), () {
-      // Use pushReplacement to replace the splash screen on the stack
-      // This prevents the user from navigating back to the splash screen
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-      );
+      // --- AUTH CHECK LOGIC ---
+      // Check if the user is already signed in
+      final user = FirebaseAuth.instance.currentUser;
+
+      if (mounted) {
+        if (user != null) {
+          // User exists, go to Main Dashboard
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const MainScreen()),
+          );
+        } else {
+          // No user, go to Login Screen
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+          );
+        }
+      }
     });
   }
 
@@ -80,16 +94,21 @@ class _SplashScreenState extends State<SplashScreen>
                 width: iconSize,
                 height: iconSize,
                 decoration: BoxDecoration(
-                  color: Colors.white, // White background for the icon container
-                  borderRadius: BorderRadius.circular(20.0),
+                  // CHANGE 1: The box background is now BLUE to match your image
+                  color: primaryBlue, 
+                  borderRadius: BorderRadius.circular(24.0),
+                  boxShadow: [
+                    BoxShadow(
+                      // Made shadow slightly darker so the box stands out from the background
+                      color: Colors.black.withOpacity(0.3), 
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
+                    )
+                  ],
                 ),
-                child: const Icon(
-                  Icons.school,
-                  color: primaryBlue, // Blue icon on white background
-                  size: iconSize * 0.7,
-                ),
+                child: const Icon(Icons.school, color: Colors.white, size: 24),
               ),
-              const SizedBox(height: 20.0),
+              const SizedBox(height: 24.0),
 
               // --- App Name ---
               const Text(
@@ -98,10 +117,10 @@ class _SplashScreenState extends State<SplashScreen>
                   color: Colors.white,
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  letterSpacing: 1.5,
+                  letterSpacing: 1.2,
                 ),
               ),
-              const SizedBox(height: 10.0),
+              const SizedBox(height: 8.0),
               
               // --- Tagline ---
               const Text(
@@ -109,6 +128,7 @@ class _SplashScreenState extends State<SplashScreen>
                 style: TextStyle(
                   color: Colors.white70,
                   fontSize: 16,
+                  fontStyle: FontStyle.italic,
                 ),
               ),
             ],
