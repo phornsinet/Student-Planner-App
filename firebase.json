@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "student-planner-app-63b77",
+    "site": "student-planner-app",
     "public": "build/web",
     "ignore": [
       "firebase.json",
