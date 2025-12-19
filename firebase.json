@@ -1,36 +1,17 @@
 {
-  "flutter": {
-    "platforms": {
-      "android": {
-        "default": {
-          "projectId": "student-plan-app",
-          "appId": "1:289367638796:android:850e9c3839ffecd761bf29",
-          "fileOutput": "android/app/google-services.json"
-        }
-      },
-      "dart": {
-        "lib/firebase_options.dart": {
-          "projectId": "student-plan-app",
-          "configurations": {
-            "android": "1:289367638796:android:850e9c3839ffecd761bf29",
-            "ios": "1:289367638796:ios:5db368bae662ca8961bf29",
-            "macos": "1:289367638796:ios:5db368bae662ca8961bf29",
-            "web": "1:289367638796:web:23b6121c49f3683261bf29",
-            "windows": "1:289367638796:web:3010604d5f792e3c61bf29"
-          }
-        }
-      }
-    }
-  },
   "hosting": {
-    "source": ".",
+    "site": "student-planner-app-63b77",
+    "public": "build/web",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
     ],
-    "frameworksBackend": {
-      "region": "asia-east1"
-    }
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
   }
 }
