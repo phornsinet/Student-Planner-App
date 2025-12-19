@@ -2,24 +2,24 @@ name: Deploy to Firebase Hosting on merge
 'on':
   push:
     branches:
-      - main # Change this to 'master' if your main branch is named master
+      - main  # Make sure this matches your branch name (main or master)
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      # 1. Setup Flutter environment
+      # 1. Setup Flutter
       - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
 
-      # 2. Install Flutter dependencies
+      # 2. Get dependencies
       - name: Install Dependencies
         run: flutter pub get
 
-      # 3. Build the Web version of your app
+      # 3. Build for Web
       - name: Build Web
         run: flutter build web
 
@@ -29,5 +29,5 @@ jobs:
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_STUDENT_PLANNER_APP }}'
-          projectId: student-planner-app-xxxx # Replace with your actual Project ID
+          projectId: student-planner-app-63b77  # Double check this ID in your .firebaserc file
           channelId: live
