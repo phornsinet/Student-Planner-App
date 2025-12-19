@@ -2,7 +2,7 @@ name: Deploy to Firebase Hosting on merge
 'on':
   push:
     branches:
-      - main  # Make sure this matches your branch name (main or master)
+      - main  # or 'master' if that is your branch name
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
@@ -28,6 +28,7 @@ jobs:
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_STUDENT_PLANNER_APP }}'
-          projectId: student-planner-app-63b77  # Double check this ID in your .firebaserc file
+          # --- UPDATED SECRET NAME ---
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_STUDENT_PLAN_APP }}'
+          projectId: student-planner-app-63b77
           channelId: live
