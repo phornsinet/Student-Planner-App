@@ -7,19 +7,15 @@ import 'package:audioplayers/audioplayers.dart';
 class TimerController extends ChangeNotifier {
   Timer? _timer;
   
-  // Variables for the countdown
   int _totalSessionSeconds = 25 * 60; 
   int _secondsRemaining = 25 * 60;    
   bool _isActive = false;
 
-  // Sound player instance
   final AudioPlayer _audioPlayer = AudioPlayer(); 
 
-  // Focus Stats variables
   int totalFocusMinutesToday = 0;
   int dailyGoalMinutes = 120; 
 
-  // Getters
   int get secondsRemaining => _secondsRemaining;
   int get totalSessionSeconds => _totalSessionSeconds; 
   bool get isActive => _isActive;
@@ -30,11 +26,9 @@ class TimerController extends ChangeNotifier {
     return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 
-  // --- SOUND LOGIC ---
 
   Future<void> _playStartSound() async {
     try {
-      // We set release mode to loop so the sound continues while focusing
       await _audioPlayer.setReleaseMode(ReleaseMode.loop);
       await _audioPlayer.play(AssetSource('sounds/start_timer.mp3'));
     } catch (e) {

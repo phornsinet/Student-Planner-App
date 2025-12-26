@@ -10,7 +10,6 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  // Controllers to get the text from fields
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmController = TextEditingController();
@@ -30,16 +29,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => _isLoading = true);
 
-    // Call the service
     String? result = await _authService.signUp(email, password);
 
     if (mounted) setState(() => _isLoading = false);
 
     if (result == "success") {
-      // ✅ FIX: Do NOT push to TaskListScreen.
-      // Instead, just Pop back to the previous screen (the AuthGate/Login area).
-      // The AuthGate in your main.dart will notice the new user and 
-      // show the MainScreen (with the bottom bar) automatically!
+      
       if (mounted) {
         Navigator.pop(context); 
       }

@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart'; // Needed for date formatting
+import 'package:intl/intl.dart'; 
 import '../controllers/task_controller.dart';
 import '../models/task_model.dart';
 import 'add_task_screen.dart';
-// import 'edit_profile_screen.dart'; // unused
-// import 'dart:convert'; // unused
-// Replace 'student_planner_app' with your actual project name if different
 import 'package:student_planner_app/features/timer/controllers/timer_controller.dart';
 import 'package:student_planner_app/features/timer/screens/pomodoro_screen.dart';
 
@@ -18,7 +15,6 @@ class TaskListScreen extends StatefulWidget {
 
 class _TaskListScreenState extends State<TaskListScreen> {
   final TaskController _controller = TaskController();
-  // 1. ADD THIS LINE
   final TimerController _timerController = TimerController();
 
   String _activeFilter = "All";
@@ -28,7 +24,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
     super.initState();
     _controller.loadTasks();
     _controller.loadUserProfile();
-    // 2. ADD THIS LINE to fetch today's minutes
     _timerController.loadDailyFocusTime();
   }
 
@@ -36,8 +31,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
 
-    // 1. We use Listenable.merge to listen to BOTH _controller (Tasks)
-    // and _timerController (Focus Time) at the same time.
+   
     return ListenableBuilder(
       listenable: Listenable.merge([_controller, _timerController]),
       builder: (context, child) {
@@ -55,7 +49,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
                           _buildHeader(user?.email ?? "User"),
                           const SizedBox(height: 24),
 
-                          // 2. ADDED: This shows your Blue Bolt Focus card
                           _buildFocusSummaryCard(_timerController),
 
                           const SizedBox(height: 24),
@@ -97,20 +90,17 @@ class _TaskListScreenState extends State<TaskListScreen> {
     );
   }
 
-  // === UPDATED SECTION: MY TASKS ===
   Widget _buildMyTasksSection() {
-    // 1. Filter tasks based on the selected tab
     final filteredList =
         _controller.tasks.where((task) {
           if (_activeFilter == "Pending") return !task.isCompleted;
           if (_activeFilter == "Completed") return task.isCompleted;
-          return true; // "All"
+          return true;
         }).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section Title and Add Button
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -121,7 +111,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
                   "My Tasks",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                // Real-time count update
                 Text(
                   "${filteredList.length} tasks listed",
                   style: const TextStyle(color: Colors.grey, fontSize: 12),
@@ -147,11 +136,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
           ],
         ),
         const SizedBox(height: 16),
-        // Filter Tabs
         _buildFilterTabs(),
         const SizedBox(height: 16),
 
-        // The Task List or Empty State
         filteredList.isEmpty
             ? _buildEmptyState()
             : _buildTaskList(filteredList),

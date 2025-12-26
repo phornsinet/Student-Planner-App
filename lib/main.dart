@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 import 'features/auth/screens/splash_screen.dart';
-// CORRECTED PATHS based on your folder structure
 import 'features/auth/screens/login_screen.dart'; 
 import 'features/home/screens/main_screen.dart';  
 

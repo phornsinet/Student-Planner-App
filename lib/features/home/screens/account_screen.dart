@@ -4,8 +4,7 @@ import 'dart:convert';
 import '../../tasks/controllers/task_controller.dart'; 
 import '../../tasks/screens/edit_profile_screen.dart'; 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../auth/screens/splash_screen.dart'; // Ensure path matches your structure
-
+import '../../auth/screens/splash_screen.dart'; 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
 
@@ -34,7 +33,6 @@ class _AccountScreenState extends State<AccountScreen> {
           return SingleChildScrollView(
             child: Column(
               children: [
-                // --- VIBRANT GRADIENT HEADER ---
                 Stack(
                   alignment: Alignment.center,
                   clipBehavior: Clip.none,

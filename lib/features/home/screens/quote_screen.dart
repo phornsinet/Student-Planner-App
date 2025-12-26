@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'dart:math'; // Import dart:math for random number generation
+import 'dart:math'; 
 
-// 1. Change to StatefulWidget so the screen can update
 class QuoteScreen extends StatefulWidget {
   const QuoteScreen({super.key});
 
@@ -10,7 +9,6 @@ class QuoteScreen extends StatefulWidget {
 }
 
 class _QuoteScreenState extends State<QuoteScreen> {
-  // 2. Define a list of positive quotes and authors
   final List<Map<String, String>> _quotes = [
     {"quote": "The only way to do great work is to love what you do.", "author": "Steve Jobs"},
     {"quote": "Believe you can and you're halfway there.", "author": "Theodore Roosevelt"},
@@ -29,17 +27,14 @@ class _QuoteScreenState extends State<QuoteScreen> {
     {"quote": "The secret of getting ahead is getting started.", "author": "Mark Twain"},
   ];
 
-  // 3. Variable to track the current index showing
   int _currentIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    // Generate a random quote right when the screen loads
     _generateRandomQuote();
   }
 
-  // 4. Function to pick a new random index
   void _generateRandomQuote() {
     setState(() {
       _currentIndex = Random().nextInt(_quotes.length);
@@ -49,7 +44,6 @@ class _QuoteScreenState extends State<QuoteScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 5. Beautiful Gradient Background
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
