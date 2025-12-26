@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:convert';
 import '../../tasks/controllers/task_controller.dart'; 
 import '../../tasks/screens/edit_profile_screen.dart'; 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../auth/screens/splash_screen.dart'; // Ensure path matches your structure
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -89,15 +91,38 @@ class _AccountScreenState extends State<AccountScreen> {
                 
                 const SizedBox(height: 60),
 
-                // --- USER INFO ---
-                Text(
-                  user?.displayName ?? "Student User",
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
-                ),
-                Text(
-                  user?.email ?? "no-email@student.com",
-                  style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
-                ),
+               // --- USER INFO ---
+StreamBuilder<DocumentSnapshot>(
+  // 1. Listen to the specific user document in Firestore
+  stream: FirebaseFirestore.instance
+      .collection('users')
+      .doc(user?.uid)
+      .snapshots(),
+  builder: (context, snapshot) {
+    // 2. Default name if data is still loading or doesn't exist
+    String displayName = user?.displayName ?? "Student User";
+
+    if (snapshot.hasData && snapshot.data!.exists) {
+      // 3. Extract the 'displayName' you saved in EditProfileScreen
+      final data = snapshot.data!.data() as Map<String, dynamic>;
+      displayName = data['displayName'] ?? displayName;
+    }
+
+    return Text(
+      displayName,
+      style: const TextStyle(
+        fontSize: 24, 
+        fontWeight: FontWeight.bold, 
+        color: Color(0xFF1E293B),
+      ),
+    );
+  },
+),
+// Keep your email text below as it was
+Text(
+  user?.email ?? "no-email@student.com",
+  style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
+),
 
                 const SizedBox(height: 30),
 
@@ -151,14 +176,27 @@ class _AccountScreenState extends State<AccountScreen> {
                       const SizedBox(height: 12),
                       _buildSettingsGroup([
                         _buildAccountTile(
-                          icon: Icons.logout_rounded,
-                          title: "Logout",
-                          subtitle: "Exit your account",
-                          iconBgColor: const Color(0xFFFEE2E2),
-                          iconColor: Colors.redAccent,
-                          showArrow: false,
-                          onTap: () => FirebaseAuth.instance.signOut(),
-                        ),
+  icon: Icons.logout_rounded,
+  title: "Logout",
+  subtitle: "Exit your account",
+  iconBgColor: const Color(0xFFFEE2E2),
+  iconColor: Colors.redAccent,
+  showArrow: false,
+  // --- UPDATED LOGOUT LOGIC ---
+  onTap: () async {
+    // 1. Sign out from Firebase
+    await FirebaseAuth.instance.signOut();
+    
+    // 2. Navigate to SplashScreen and clear the navigation stack
+    if (context.mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const SplashScreen()),
+        (route) => false, // This removes all previous screens (Home, Account, etc.)
+      );
+    }
+  },
+),
                       ]),
                       const SizedBox(height: 40),
                     ],

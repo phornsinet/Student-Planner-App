@@ -33,16 +33,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
     // Call the service
     String? result = await _authService.signUp(email, password);
 
-    setState(() => _isLoading = false);
+    if (mounted) setState(() => _isLoading = false);
 
     if (result == "success") {
-      // Navigate to Home/Task screen
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const TaskListScreen()),
-      );
+      // ✅ FIX: Do NOT push to TaskListScreen.
+      // Instead, just Pop back to the previous screen (the AuthGate/Login area).
+      // The AuthGate in your main.dart will notice the new user and 
+      // show the MainScreen (with the bottom bar) automatically!
+      if (mounted) {
+        Navigator.pop(context); 
+      }
     } else {
-      // Show the specific error from Firebase
       _showSnackBar(result ?? "An error occurred");
     }
   }

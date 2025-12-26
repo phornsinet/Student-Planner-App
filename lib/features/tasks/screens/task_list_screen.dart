@@ -4,9 +4,8 @@ import 'package:intl/intl.dart'; // Needed for date formatting
 import '../controllers/task_controller.dart';
 import '../models/task_model.dart';
 import 'add_task_screen.dart';
-import 'edit_profile_screen.dart';
-import 'dart:convert';
-import 'package:flutter/material.dart';
+// import 'edit_profile_screen.dart'; // unused
+// import 'dart:convert'; // unused
 // Replace 'student_planner_app' with your actual project name if different
 import 'package:student_planner_app/features/timer/controllers/timer_controller.dart';
 import 'package:student_planner_app/features/timer/screens/pomodoro_screen.dart';
@@ -20,7 +19,7 @@ class TaskListScreen extends StatefulWidget {
 class _TaskListScreenState extends State<TaskListScreen> {
   final TaskController _controller = TaskController();
   // 1. ADD THIS LINE
-  final TimerController _timerController = TimerController(); 
+  final TimerController _timerController = TimerController();
 
   String _activeFilter = "All";
 
@@ -30,14 +29,14 @@ class _TaskListScreenState extends State<TaskListScreen> {
     _controller.loadTasks();
     _controller.loadUserProfile();
     // 2. ADD THIS LINE to fetch today's minutes
-    _timerController.loadDailyFocusTime(); 
+    _timerController.loadDailyFocusTime();
   }
 
- @override
+  @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
 
-    // 1. We use Listenable.merge to listen to BOTH _controller (Tasks) 
+    // 1. We use Listenable.merge to listen to BOTH _controller (Tasks)
     // and _timerController (Focus Time) at the same time.
     return ListenableBuilder(
       listenable: Listenable.merge([_controller, _timerController]),
@@ -45,60 +44,68 @@ class _TaskListScreenState extends State<TaskListScreen> {
         return Scaffold(
           backgroundColor: const Color(0xFFF1F5F9),
           body: SafeArea(
-            child: _controller.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildHeader(user?.email ?? "User"),
-                        const SizedBox(height: 24),
-                        
-                        // 2. ADDED: This shows your Blue Bolt Focus card
-                        _buildFocusSummaryCard(_timerController), 
-                        
-                        const SizedBox(height: 24),
-                        _buildMyTasksSection(), 
-                        const SizedBox(height: 24),
-                        _buildOverallProgress(),
-                        const SizedBox(height: 24),
-                        _buildByCategory(),
-                      ],
+            child:
+                _controller.isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : SingleChildScrollView(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildHeader(user?.email ?? "User"),
+                          const SizedBox(height: 24),
+
+                          // 2. ADDED: This shows your Blue Bolt Focus card
+                          _buildFocusSummaryCard(_timerController),
+
+                          const SizedBox(height: 24),
+                          _buildMyTasksSection(),
+                          const SizedBox(height: 24),
+                          _buildOverallProgress(),
+                          const SizedBox(height: 24),
+                          _buildByCategory(),
+                        ],
+                      ),
                     ),
-                  ),
           ),
         );
       },
     );
   }
-Widget _buildHeader(String email) {
-  return Row(
-    children: [
-      Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: const Color(0xFF2563EB),
-          borderRadius: BorderRadius.circular(12),
+
+  Widget _buildHeader(String email) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF2563EB),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Icon(Icons.school, color: Colors.white, size: 24),
         ),
-        child: const Icon(Icons.school, color: Colors.white, size: 24),
-      ),
-      const SizedBox(width: 12),
-      const Text(
-        "Smart Study Planner",
-        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
-      ),
-    ],
-  );
-}
+        const SizedBox(width: 12),
+        const Text(
+          "Smart Study Planner",
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1E293B),
+          ),
+        ),
+      ],
+    );
+  }
+
   // === UPDATED SECTION: MY TASKS ===
   Widget _buildMyTasksSection() {
     // 1. Filter tasks based on the selected tab
-    final filteredList = _controller.tasks.where((task) {
-      if (_activeFilter == "Pending") return !task.isCompleted;
-      if (_activeFilter == "Completed") return task.isCompleted;
-      return true; // "All"
-    }).toList();
+    final filteredList =
+        _controller.tasks.where((task) {
+          if (_activeFilter == "Pending") return !task.isCompleted;
+          if (_activeFilter == "Completed") return task.isCompleted;
+          return true; // "All"
+        }).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,16 +117,32 @@ Widget _buildHeader(String email) {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text("My Tasks", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const Text(
+                  "My Tasks",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
                 // Real-time count update
-                Text("${filteredList.length} tasks listed", style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                Text(
+                  "${filteredList.length} tasks listed",
+                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                ),
               ],
             ),
             ElevatedButton.icon(
-              onPressed: () => showDialog(context: context, builder: (_) => AddTaskPopup(controller: _controller)),
+              onPressed:
+                  () => showDialog(
+                    context: context,
+                    builder: (_) => AddTaskPopup(controller: _controller),
+                  ),
               icon: const Icon(Icons.add, size: 18, color: Colors.white),
               label: const Text("Add Task"),
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2563EB), foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2563EB),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
             ),
           ],
         ),
@@ -127,10 +150,10 @@ Widget _buildHeader(String email) {
         // Filter Tabs
         _buildFilterTabs(),
         const SizedBox(height: 16),
-        
+
         // The Task List or Empty State
-        filteredList.isEmpty 
-            ? _buildEmptyState() 
+        filteredList.isEmpty
+            ? _buildEmptyState()
             : _buildTaskList(filteredList),
       ],
     );
@@ -172,13 +195,30 @@ Widget _buildHeader(String email) {
               InkWell(
                 onTap: () => _controller.toggleTaskStatus(task),
                 child: Container(
-                  width: 24, height: 24,
+                  width: 24,
+                  height: 24,
                   decoration: BoxDecoration(
-                    color: task.isCompleted ? const Color(0xFF2563EB) : Colors.transparent,
+                    color:
+                        task.isCompleted
+                            ? const Color(0xFF2563EB)
+                            : Colors.transparent,
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: task.isCompleted ? const Color(0xFF2563EB) : const Color(0xFFCBD5E1), width: 2)
+                    border: Border.all(
+                      color:
+                          task.isCompleted
+                              ? const Color(0xFF2563EB)
+                              : const Color(0xFFCBD5E1),
+                      width: 2,
+                    ),
                   ),
-                  child: task.isCompleted ? const Icon(Icons.check, size: 16, color: Colors.white) : null,
+                  child:
+                      task.isCompleted
+                          ? const Icon(
+                            Icons.check,
+                            size: 16,
+                            color: Colors.white,
+                          )
+                          : null,
                 ),
               ),
               const SizedBox(width: 12),
@@ -189,7 +229,8 @@ Widget _buildHeader(String email) {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    decoration: task.isCompleted ? TextDecoration.lineThrough : null,
+                    decoration:
+                        task.isCompleted ? TextDecoration.lineThrough : null,
                     color: task.isCompleted ? Colors.grey : Colors.black,
                   ),
                 ),
@@ -207,26 +248,32 @@ Widget _buildHeader(String email) {
                     const SizedBox(width: 4),
                     Text(
                       task.categoryName,
-                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          
+
           // Row 2: Description (if exists)
           if (task.description.isNotEmpty) ...[
-             const SizedBox(height: 8),
-             Padding(
-               padding: const EdgeInsets.only(left: 36.0), // Indent to align with title
-               child: Text(
-                 task.description,
-                 style: const TextStyle(color: Colors.grey, fontSize: 13),
-                 maxLines: 2,
-                 overflow: TextOverflow.ellipsis,
-               ),
-             ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.only(
+                left: 36.0,
+              ), // Indent to align with title
+              child: Text(
+                task.description,
+                style: const TextStyle(color: Colors.grey, fontSize: 13),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
 
           const SizedBox(height: 16),
@@ -237,13 +284,24 @@ Widget _buildHeader(String email) {
               // Date Icon and Text
               Container(
                 padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(6)),
-                child: Icon(Icons.calendar_today_outlined, size: 14, color: Colors.blue[700]),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(
+                  Icons.calendar_today_outlined,
+                  size: 14,
+                  color: Colors.blue[700],
+                ),
               ),
               const SizedBox(width: 8),
               Text(
                 DateFormat('MMM dd, yyyy').format(task.dueDate),
-                style: TextStyle(color: Colors.blue[700], fontSize: 13, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  color: Colors.blue[700],
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               const Spacer(),
               // Edit Icon (Placeholder action)
@@ -252,10 +310,14 @@ Widget _buildHeader(String email) {
               // Delete Icon
               InkWell(
                 onTap: () => _controller.deleteTask(task.id),
-                child: const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent),
+                child: const Icon(
+                  Icons.delete_outline,
+                  size: 18,
+                  color: Colors.redAccent,
+                ),
               ),
             ],
-          )
+          ),
         ],
       ),
     );
@@ -264,47 +326,73 @@ Widget _buildHeader(String email) {
   // === NEW HELPER FUNCTIONS FOR COLORS/ICONS ===
   Color _getCategoryColor(TaskCategory category) {
     switch (category) {
-      case TaskCategory.assignments: return const Color(0xFF2563EB); // Blue
-      case TaskCategory.exams: return const Color(0xFFE11D48);       // Red
-      case TaskCategory.studySessions: return const Color(0xFF059669); // Green
+      case TaskCategory.assignments:
+        return const Color(0xFF2563EB); // Blue
+      case TaskCategory.exams:
+        return const Color(0xFFE11D48); // Red
+      case TaskCategory.studySessions:
+        return const Color(0xFF059669); // Green
     }
   }
 
   IconData _getCategoryIcon(TaskCategory category) {
-     switch (category) {
-      case TaskCategory.assignments: return Icons.description;
-      case TaskCategory.exams: return Icons.school;
-      case TaskCategory.studySessions: return Icons.menu_book;
+    switch (category) {
+      case TaskCategory.assignments:
+        return Icons.description;
+      case TaskCategory.exams:
+        return Icons.school;
+      case TaskCategory.studySessions:
+        return Icons.menu_book;
     }
   }
 
-  // ... (Keep _buildFilterTabs, _buildEmptyState, _buildOverallProgress, 
+  // ... (Keep _buildFilterTabs, _buildEmptyState, _buildOverallProgress,
   //      _buildStatusBox, _buildByCategory, _categoryRow, _buildSectionHeader unchanged) ...
-  
+
   Widget _buildFilterTabs() {
     return Container(
       padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: const Color(0xFFE2E8F0))),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
       child: Row(
-        children: ["All", "Pending", "Completed"].map((tab) {
-          final isSelected = _activeFilter == tab;
-          // Dynamic counts for tabs
-          int count = 0;
-          if(tab == "All") count = _controller.totalTasks;
-          if(tab == "Pending") count = _controller.pendingTasks;
-          if(tab == "Completed") count = _controller.completedTasks;
-          
-          return Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _activeFilter = tab),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(color: isSelected ? const Color(0xFF2563EB) : Colors.transparent, borderRadius: BorderRadius.circular(6)),
-                child: Center(child: Text("$tab ($count)", style: TextStyle(color: isSelected ? Colors.white : Colors.black, fontWeight: FontWeight.w500, fontSize: 13))),
-              ),
-            ),
-          );
-        }).toList(),
+        children:
+            ["All", "Pending", "Completed"].map((tab) {
+              final isSelected = _activeFilter == tab;
+              // Dynamic counts for tabs
+              int count = 0;
+              if (tab == "All") count = _controller.totalTasks;
+              if (tab == "Pending") count = _controller.pendingTasks;
+              if (tab == "Completed") count = _controller.completedTasks;
+
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _activeFilter = tab),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color:
+                          isSelected
+                              ? const Color(0xFF2563EB)
+                              : Colors.transparent,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Center(
+                      child: Text(
+                        "$tab ($count)",
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : Colors.black,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
       ),
     );
   }
@@ -313,90 +401,157 @@ Widget _buildHeader(String email) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 40),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFF2563EB).withOpacity(0.2), style: BorderStyle.solid)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF2563EB).withOpacity(0.2),
+          style: BorderStyle.solid,
+        ),
+      ),
       child: Column(
         children: [
-          CircleAvatar(backgroundColor: const Color(0xFF2563EB).withOpacity(0.1), child: const Icon(Icons.add, color: Color(0xFF2563EB))),
+          CircleAvatar(
+            backgroundColor: const Color(0xFF2563EB).withOpacity(0.1),
+            child: const Icon(Icons.add, color: Color(0xFF2563EB)),
+          ),
           const SizedBox(height: 12),
-          const Text("No tasks yet. Click \"Add Task\" to get started!", style: TextStyle(color: Colors.grey, fontSize: 13)),
+          const Text(
+            "No tasks yet. Click \"Add Task\" to get started!",
+            style: TextStyle(color: Colors.grey, fontSize: 13),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildFocusSummaryCard(TimerController timerController) {
-  double progress = (timerController.totalFocusMinutesToday / timerController.dailyGoalMinutes).clamp(0.0, 1.0);
+    double progress = (timerController.totalFocusMinutesToday /
+            timerController.dailyGoalMinutes)
+        .clamp(0.0, 1.0);
 
-  return Container(
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
-    ),
-    child: Column(
-      children: [
-        Row(
-          children: [
-            const Icon(Icons.bolt, color: Color(0xFF2563EB)),
-            const SizedBox(width: 8),
-            const Text("Daily Focus Goal", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            const Spacer(),
-            // EDIT DAILY GOAL BUTTON
-            
-          ],
-        ),
-        const SizedBox(height: 16),
-        LinearProgressIndicator(
-          value: progress,
-          minHeight: 8,
-          backgroundColor: const Color(0xFFE2E8F0),
-          valueColor: const AlwaysStoppedAnimation(Color(0xFF2563EB)),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text("${timerController.totalFocusMinutesToday} / ${timerController.dailyGoalMinutes} min",
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-            Text("${(progress * 100).toInt()}%", style: const TextStyle(color: Colors.grey)),
-          ],
-        ),
-        const SizedBox(height: 20),
-        // NAVIGATION BUTTON TO TIMER
-        // NAVIGATION BUTTON TO TIMER
-SizedBox(
-  width: double.infinity,
-  child: ElevatedButton.icon(
-    onPressed: () {
-      // This pushes the PomodoroScreen onto the navigation stack
-      Navigator.push(
-        context, 
-        MaterialPageRoute(builder: (context) => const PomodoroScreen()),
-      );
-    },
-    icon: const Icon(Icons.timer_outlined, color: Colors.white),
-    label: const Text("Start Focus Session"),
-    style: ElevatedButton.styleFrom(
-      backgroundColor: const Color(0xFF2563EB),
-      foregroundColor: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    ),
-  ),
-),
-      ],
-    ),
-  );
-}
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.bolt, color: Color(0xFF2563EB)),
+              const SizedBox(width: 8),
+              const Text(
+                "Daily Focus Goal",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: () => _showGoalSettings(timerController),
+                icon: const Icon(Icons.edit, color: Color(0xFF2563EB)),
+                tooltip: 'Edit daily goal',
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          LinearProgressIndicator(
+            value: progress,
+            minHeight: 8,
+            backgroundColor: const Color(0xFFE2E8F0),
+            valueColor: const AlwaysStoppedAnimation(Color(0xFF2563EB)),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "${timerController.totalFocusMinutesToday} / ${timerController.dailyGoalMinutes} min",
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Text(
+                "${(progress * 100).toInt()}%",
+                style: const TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          // NAVIGATION BUTTON TO TIMER
+          // NAVIGATION BUTTON TO TIMER
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                // This pushes the PomodoroScreen onto the navigation stack
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PomodoroScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.timer_outlined, color: Colors.white),
+              label: const Text("Start Focus Session"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2563EB),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-// Add this helper function below build
-void _showGoalSettings(TimerController controller) {
-  // Logic to show a dialog and update controller.dailyGoalMinutes
-}
+  // Add this helper function below build
+  void _showGoalSettings(TimerController controller) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final TextEditingController _goalController = TextEditingController(
+          text: controller.dailyGoalMinutes.toString(),
+        );
+        return AlertDialog(
+          title: const Text('Edit Daily Goal (minutes)'),
+          content: TextField(
+            controller: _goalController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(hintText: 'Enter minutes'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final int? newGoal = int.tryParse(_goalController.text.trim());
+                if (newGoal != null && newGoal > 0) {
+                  controller.updateDailyGoal(newGoal);
+                }
+                Navigator.of(context).pop();
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildOverallProgress() {
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Column(
         children: [
           _buildSectionHeader("Overall Progress", Icons.check_circle_outline),
@@ -407,21 +562,47 @@ void _showGoalSettings(TimerController controller) {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text("Completion Rate", style: TextStyle(color: Colors.grey, fontSize: 13)),
-                    Text("${(_controller.progressPercent * 100).toInt()}%", style: const TextStyle(color: Color(0xFF2563EB), fontWeight: FontWeight.bold)),
+                    const Text(
+                      "Completion Rate",
+                      style: TextStyle(color: Colors.grey, fontSize: 13),
+                    ),
+                    Text(
+                      "${(_controller.progressPercent * 100).toInt()}%",
+                      style: const TextStyle(
+                        color: Color(0xFF2563EB),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
-                  child: LinearProgressIndicator(value: _controller.progressPercent, minHeight: 8, backgroundColor: const Color(0xFFE2E8F0), color: const Color(0xFF2563EB)),
+                  child: LinearProgressIndicator(
+                    value: _controller.progressPercent,
+                    minHeight: 8,
+                    backgroundColor: const Color(0xFFE2E8F0),
+                    color: const Color(0xFF2563EB),
+                  ),
                 ),
                 const SizedBox(height: 20),
                 Row(
                   children: [
-                    _buildStatusBox("Completed", _controller.completedTasks, const Color(0xFFF0FDF4), const Color(0xFF16A34A), Icons.check_circle),
+                    _buildStatusBox(
+                      "Completed",
+                      _controller.completedTasks,
+                      const Color(0xFFF0FDF4),
+                      const Color(0xFF16A34A),
+                      Icons.check_circle,
+                    ),
                     const SizedBox(width: 12),
-                    _buildStatusBox("Pending", _controller.pendingTasks, const Color(0xFFFFF7ED), const Color(0xFFEA580C), Icons.access_time),
+                    _buildStatusBox(
+                      "Pending",
+                      _controller.pendingTasks,
+                      const Color(0xFFFFF7ED),
+                      const Color(0xFFEA580C),
+                      Icons.access_time,
+                    ),
                   ],
                 ),
               ],
@@ -432,20 +613,51 @@ void _showGoalSettings(TimerController controller) {
     );
   }
 
-  Widget _buildStatusBox(String label, int count, Color bg, Color accent, IconData icon) {
+  Widget _buildStatusBox(
+    String label,
+    int count,
+    Color bg,
+    Color accent,
+    IconData icon,
+  ) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12), border: Border.all(color: accent.withOpacity(0.2))),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: accent.withOpacity(0.2)),
+        ),
         child: Row(
           children: [
-            Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: accent, borderRadius: BorderRadius.circular(8)), child: Icon(icon, color: Colors.white, size: 16)),
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: accent,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: Colors.white, size: 16),
+            ),
             const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(color: accent, fontSize: 11, fontWeight: FontWeight.w500)),
-                Text("$count", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: accent)),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: accent,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  "$count",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: accent,
+                  ),
+                ),
               ],
             ),
           ],
@@ -456,7 +668,10 @@ void _showGoalSettings(TimerController controller) {
 
   Widget _buildByCategory() {
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Column(
         children: [
           _buildSectionHeader("By Category", Icons.book_outlined),
@@ -464,11 +679,26 @@ void _showGoalSettings(TimerController controller) {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                _categoryRow("Assignments", _controller.getCategoryCount(TaskCategory.assignments), const Color(0xFF2563EB), Icons.description),
+                _categoryRow(
+                  "Assignments",
+                  _controller.getCategoryCount(TaskCategory.assignments),
+                  const Color(0xFF2563EB),
+                  Icons.description,
+                ),
                 const SizedBox(height: 12),
-                _categoryRow("Exams", _controller.getCategoryCount(TaskCategory.exams), const Color(0xFFE11D48), Icons.school),
+                _categoryRow(
+                  "Exams",
+                  _controller.getCategoryCount(TaskCategory.exams),
+                  const Color(0xFFE11D48),
+                  Icons.school,
+                ),
                 const SizedBox(height: 12),
-                _categoryRow("Study Sessions", _controller.getCategoryCount(TaskCategory.studySessions), const Color(0xFF059669), Icons.menu_book),
+                _categoryRow(
+                  "Study Sessions",
+                  _controller.getCategoryCount(TaskCategory.studySessions),
+                  const Color(0xFF059669),
+                  Icons.menu_book,
+                ),
               ],
             ),
           ),
@@ -480,13 +710,36 @@ void _showGoalSettings(TimerController controller) {
   Widget _categoryRow(String label, int count, Color color, IconData icon) {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: color.withOpacity(0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withOpacity(0.1))),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.1)),
+      ),
       child: Row(
         children: [
-          Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(8)), child: Icon(icon, color: Colors.white, size: 18)),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: Colors.white, size: 18),
+          ),
           const SizedBox(width: 16),
-          Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600))),
-          Text("$count", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+          Text(
+            "$count",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
         ],
       ),
     );
@@ -495,12 +748,22 @@ void _showGoalSettings(TimerController controller) {
   Widget _buildSectionHeader(String title, IconData icon) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: const BoxDecoration(color: Color(0xFF2563EB), borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      decoration: const BoxDecoration(
+        color: Color(0xFF2563EB),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       child: Row(
         children: [
           Icon(icon, color: Colors.white, size: 20),
           const SizedBox(width: 10),
-          Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
         ],
       ),
     );

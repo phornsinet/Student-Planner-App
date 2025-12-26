@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Add this
 import '../services/auth_service.dart'; // Ensure this matches your path
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
@@ -27,11 +26,11 @@ class _LoginScreenState extends State<LoginScreen> {
   // 2. Logic to handle the Sign In
   void _signIn() async {
     setState(() => _isLoading = true);
-    
+
     // FIX: Change 'User?' to 'String?' to match your AuthService
     String? result = await _authService.signIn(
-      _emailController.text.trim(), 
-      _passwordController.text.trim()
+      _emailController.text.trim(),
+      _passwordController.text.trim(),
     );
 
     setState(() => _isLoading = false);
@@ -128,7 +127,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           onPressed: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => const ForgotPasswordScreen(),
+                              ),
                             );
                           },
                           child: const Text(
@@ -148,7 +150,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: double.infinity,
                         height: 50,
                         child: ElevatedButton(
-                          onPressed: _isLoading ? null : _signIn, // Disable if loading
+                          onPressed:
+                              _isLoading ? null : _signIn, // Disable if loading
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primaryBlue,
                             shape: RoundedRectangleBorder(
@@ -156,16 +159,19 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             elevation: 0,
                           ),
-                          child: _isLoading 
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            : const Text(
-                                'Sign In',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                          child:
+                              _isLoading
+                                  ? const CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
+                                  : const Text(
+                                    'Sign In',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                         ),
                       ),
                       const SizedBox(height: verticalSpacing),
@@ -175,7 +181,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                            MaterialPageRoute(
+                              builder: (context) => const RegisterScreen(),
+                            ),
                           );
                         },
                         child: const Text(
@@ -205,13 +213,17 @@ class _LoginScreenState extends State<LoginScreen> {
     return TextField(
       controller: controller, // Essential for Firebase
       obscureText: isPassword,
-      keyboardType: isPassword ? TextInputType.text : TextInputType.emailAddress,
+      keyboardType:
+          isPassword ? TextInputType.text : TextInputType.emailAddress,
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,
         fillColor: Colors.grey.shade100,
         filled: true,
-        contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 15.0,
+          horizontal: 10.0,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8.0),
           borderSide: BorderSide.none,

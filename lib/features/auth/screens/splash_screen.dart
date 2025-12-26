@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'login_screen.dart'; 
 import '../../home/screens/main_screen.dart'; // Ensure this path is correct
+import '../../../main.dart';
 
 // Define constants for design elements
 const Color primaryBlue = Color(0xFF1976D2);
@@ -50,24 +51,13 @@ class _SplashScreenState extends State<SplashScreen>
 
   void _startTimer() {
     Future.delayed(const Duration(seconds: splashDurationSeconds), () {
-      // --- AUTH CHECK LOGIC ---
-      // Check if the user is already signed in
-      final user = FirebaseAuth.instance.currentUser;
-
       if (mounted) {
-        if (user != null) {
-          // User exists, go to Main Dashboard
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const MainScreen()),
-          );
-        } else {
-          // No user, go to Login Screen
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const LoginScreen()),
-          );
-        }
+        // FIX: Always navigate to AuthGate. 
+        // Let the AuthGate decide if the user goes to Login or MainScreen.
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const AuthGate()),
+        );
       }
     });
   }
